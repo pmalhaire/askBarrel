@@ -1,11 +1,15 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module BarrelClient where
 
 import Data.Aeson
 import GHC.Generics
 import Data.Text
+
+import Network.HTTP.Client (newManager, defaultManagerSettings,
+    responseStatus, responseBody, httpLbs, parseRequest)
+import Network.HTTP.Types.Status (statusCode)
 
 get :: String -> String
 get []  = error "emtpy get is invalid"
@@ -44,3 +48,13 @@ instance ToJSON Doc where
         object [ "id"      .= docId
                 , "value"   .= value
                 ]
+
+main :: IO ()
+main = do
+    manager <- newManager defaultManagerSettings
+
+    request <- parseRequest "http://localhost:7080/dbs/mydb/docs"
+    response <- httpLbs request manager
+
+    putStrLn $ "The status code was: " ++ (show $ statusCode $ responseStatus response)
+    print $ responseBody response
