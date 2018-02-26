@@ -54,14 +54,25 @@ instance ToJSON Doc where
                 , "value"   .= value
                 ]
 -}
+data HostConfig = HostConfig {
+    host :: String,
+    port :: String
+} deriving (Show)
+
+dbAddr :: HostConfig -> String -> String
+dbAddr conf db = "http://" ++ host conf ++ ":" ++ port conf
+  ++ "/dbs/" ++ db ++ "/"
 
 prettyPrint :: I.ByteString -> IO ()
+prettyPrint "" = putStrLn "empty json"
 prettyPrint a = putStrLn $ C.unpack $ encodePretty ( decode a :: Maybe Value )
 
 main :: IO ()
 main = do
+    let config = HostConfig "localhost" "7080"
+    let addr = dbAddr config "mydb" ++ "docs"
     manager <- newManager defaultManagerSettings
-    request <- parseRequest "http://localhost:7080/dbs/mydb/docs"
+    request <- parseRequest addr
     response <- httpLbs request manager
     let status = statusCode $ responseStatus response
     putStrLn $ "The status code was: " ++ show status
