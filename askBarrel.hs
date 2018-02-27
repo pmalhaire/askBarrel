@@ -31,11 +31,11 @@ data DbConfig = DbConfig {
     db :: String
 }
 
--- TODO create connection context
--- TODO split HTTP and barrel code
-
 instance Show DbConfig where
     show (DbConfig hostConf db) = host hostConf ++ ":" ++ port hostConf ++ " " ++ db
+
+-- TODO create connection context
+-- TODO split HTTP and barrel code
 
 dbAddr :: DbConfig -> String
 dbAddr conf = "http://" ++ host (hostConf conf) ++ ":" ++ port (hostConf conf)
