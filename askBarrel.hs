@@ -45,8 +45,9 @@ prettyPrint :: I.ByteString -> String
 prettyPrint "" = "empty json"
 prettyPrint a = C.unpack $ encodePretty ( decode a :: Maybe Value )
 
-readResponse resp =
-    putStrLn $ "The status code was: " ++ show status ++ prettyPrint body
+readResponse resp = do
+    putStrLn $ "Status: " ++ show status
+    putStrLn $ prettyPrint body
     where
         status = statusCode $ responseStatus resp
         body = responseBody resp
