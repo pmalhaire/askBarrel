@@ -18,6 +18,10 @@ import Network.HTTP.Client (newManager, defaultManagerSettings,
 import Network.HTTP.Types.Status (statusCode)
 import Control.Exception.Enclosed
 
+-- REPL
+import Control.Monad (unless)
+import System.IO
+
 data Context = Context {
     host :: String,
     port :: String,
@@ -45,22 +49,34 @@ readResponse resp = do
         status = statusCode $ responseStatus resp
         body = responseBody resp
 
-handleError e addr dbConf = do
+-- todo find exception type
+handleError e addr ctx = do
     putStr "Could not connect to "
     print addr
     putStr "Configuration is "
-    print dbConf
+    print ctx
     putStrLn ""
     print e
 
-main :: IO ()
-main = do
-    let ctx = Context "localhost" "7080" "mydb"
-    let addr = dbAddr ctx  ++ "docs"
-    manager <- newManager defaultManagerSettings
+req addr manager ctx = do
     request <- parseRequest addr
     eres <- tryAny $ httpLbs request manager
     case eres of
        Left e -> handleError e addr ctx
        Right lbs -> readResponse lbs
 
+eval ctx input = do
+    let addr = dbAddr ctx  ++ input
+    manager <- newManager defaultManagerSettings
+    req addr manager ctx
+
+read' :: IO String
+read' = putStr "askBarrel> "
+    >> getLine
+
+main :: IO ()
+main = do
+    let ctx = Context "localhost" "7080" "mydb"
+    input <- read'
+    unless (input == ":quit") $ eval ctx input
+        >> main
