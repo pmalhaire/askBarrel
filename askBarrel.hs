@@ -18,27 +18,20 @@ import Network.HTTP.Client (newManager, defaultManagerSettings,
 import Network.HTTP.Types.Status (statusCode)
 import Control.Exception.Enclosed
 
-data HostConfig = HostConfig {
+data Context = Context {
     host :: String,
-    port :: String
-}
-
-instance Show HostConfig where
-    show (HostConfig host port) = host ++ ":" ++ port
-
-data DbConfig = DbConfig {
-    hostConf :: HostConfig,
+    port :: String,
     db :: String
 }
 
-instance Show DbConfig where
-    show (DbConfig hostConf db) = host hostConf ++ ":" ++ port hostConf ++ " " ++ db
+instance Show Context where
+    show (Context host port db) = host ++ ":" ++ port ++ " " ++ db
 
 -- TODO create connection context
 -- TODO split HTTP and barrel code
 
-dbAddr :: DbConfig -> String
-dbAddr conf = "http://" ++ host (hostConf conf) ++ ":" ++ port (hostConf conf)
+dbAddr :: Context -> String
+dbAddr conf = "http://" ++ host conf ++ ":" ++ port conf
   ++ "/dbs/" ++ db conf ++ "/"
 
 prettyPrint :: I.ByteString -> String
@@ -62,13 +55,12 @@ handleError e addr dbConf = do
 
 main :: IO ()
 main = do
-    let hostConf = HostConfig "localhost" "7080"
-    let dbConf = DbConfig hostConf "mydb"
-    let addr = dbAddr dbConf  ++ "docs"
+    let ctx = Context "localhost" "7080" "mydb"
+    let addr = dbAddr ctx  ++ "docs"
     manager <- newManager defaultManagerSettings
     request <- parseRequest addr
     eres <- tryAny $ httpLbs request manager
     case eres of
-       Left e -> handleError e addr dbConf
+       Left e -> handleError e addr ctx
        Right lbs -> readResponse lbs
 
