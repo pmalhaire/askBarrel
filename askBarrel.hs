@@ -59,9 +59,14 @@ data HostConfig = HostConfig {
     port :: String
 } deriving (Show)
 
-dbAddr :: HostConfig -> String -> String
-dbAddr conf db = "http://" ++ host conf ++ ":" ++ port conf
-  ++ "/dbs/" ++ db ++ "/"
+data DbConfig = DbConfig {
+    hostConf :: HostConfig,
+    db :: String
+} deriving (Show)
+
+dbAddr :: DbConfig -> String
+dbAddr conf = "http://" ++ host (hostConf conf) ++ ":" ++ port (hostConf conf)
+  ++ "/dbs/" ++ db conf ++ "/"
 
 prettyPrint :: I.ByteString -> IO ()
 prettyPrint "" = putStrLn "empty json"
@@ -69,8 +74,9 @@ prettyPrint a = putStrLn $ C.unpack $ encodePretty ( decode a :: Maybe Value )
 
 main :: IO ()
 main = do
-    let config = HostConfig "localhost" "7080"
-    let addr = dbAddr config "mydb" ++ "docs"
+    let hostConf = HostConfig "localhost" "7080"
+    let dbConf = DbConfig hostConf "mydb"
+    let addr = dbAddr dbConf  ++ "docs"
     manager <- newManager defaultManagerSettings
     request <- parseRequest addr
     response <- httpLbs request manager
