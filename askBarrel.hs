@@ -12,9 +12,11 @@ import qualified Data.ByteString.Lazy.Char8 as C (unpack)
 import qualified Data.ByteString.Lazy.Internal as I (ByteString)
 import Data.Aeson.Encode.Pretty
 
+
 import Network.HTTP.Client (newManager, defaultManagerSettings,
     responseStatus, responseBody, httpLbs, parseRequest)
 import Network.HTTP.Types.Status (statusCode)
+import Control.Exception.Enclosed
 {-|
 get :: String -> String
 get []  = error "emtpy get is invalid"
@@ -57,20 +59,39 @@ instance ToJSON Doc where
 data HostConfig = HostConfig {
     host :: String,
     port :: String
-} deriving (Show)
+}
+
+instance Show HostConfig where
+    show (HostConfig host port) = host ++ ":" ++ port
 
 data DbConfig = DbConfig {
     hostConf :: HostConfig,
     db :: String
-} deriving (Show)
+}
+
+instance Show DbConfig where
+    show (DbConfig hostConf db) = host hostConf ++ ":" ++ port hostConf ++ " " ++ db
 
 dbAddr :: DbConfig -> String
 dbAddr conf = "http://" ++ host (hostConf conf) ++ ":" ++ port (hostConf conf)
   ++ "/dbs/" ++ db conf ++ "/"
 
-prettyPrint :: I.ByteString -> IO ()
-prettyPrint "" = putStrLn "empty json"
-prettyPrint a = putStrLn $ C.unpack $ encodePretty ( decode a :: Maybe Value )
+prettyPrint :: I.ByteString -> String
+prettyPrint "" = "empty json"
+prettyPrint a = C.unpack $ encodePretty ( decode a :: Maybe Value )
+
+readResponse resp =
+    putStrLn $ "The status code was: " ++ show status ++ prettyPrint body
+    where
+        status = statusCode $ responseStatus resp
+        body = responseBody resp
+
+handleError e addr dbConf = do
+    putStr "Could not connect to "
+    print addr
+    putStr "Configuration is "
+    print dbConf
+    print e
 
 main :: IO ()
 main = do
@@ -79,8 +100,8 @@ main = do
     let addr = dbAddr dbConf  ++ "docs"
     manager <- newManager defaultManagerSettings
     request <- parseRequest addr
-    response <- httpLbs request manager
-    let status = statusCode $ responseStatus response
-    putStrLn $ "The status code was: " ++ show status
-    let body = responseBody response
-    prettyPrint body
+    eres <- tryAny $ httpLbs request manager
+    case eres of
+       Left e -> handleError e addr dbConf
+       Right lbs -> readResponse lbs
+
