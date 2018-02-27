@@ -5,7 +5,6 @@ module Main where
 -- json
 import Data.Aeson
 import GHC.Generics
---import Data.Text
 
 -- pretty print
 import qualified Data.ByteString.Lazy.Char8 as C (unpack)
@@ -118,7 +117,7 @@ options = [
     ]
 
 ini :: Repl ()
-ini = liftIO $ putStrLn "Welcome!"
+ini = liftIO $ putStrLn "Welcome to ask Barrel!"
 
 repl :: IO ()
 repl = evalRepl ">>> " cmd options (Word0 completer) ini
