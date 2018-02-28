@@ -117,7 +117,15 @@ options = [
     ]
 
 ini :: Repl ()
-ini = liftIO $ putStrLn "Welcome to ask Barrel!"
+ini = do liftIO $ putStrLn "Welcome to ask Barrel!\n"
+         liftIO $ putStrLn "   .- ¨¨¨¨ -.   "
+         liftIO $ putStrLn "  /'-.____.-'\\"
+         liftIO $ putStrLn "  '-.______.-'  "
+         liftIO $ putStrLn " |    \\ \\     |"
+         liftIO $ putStrLn " |    /  \\    |"
+         liftIO $ putStrLn "     / /\\ \\    "
+         liftIO $ putStrLn "  \\'-.____.-'/"
+         liftIO $ putStrLn "   '-.____.-'   "
 
 repl :: IO ()
 repl = evalRepl ">>> " cmd options (Word0 completer) ini
