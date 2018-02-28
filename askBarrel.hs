@@ -85,7 +85,7 @@ cmd input = liftIO $ print input
 -- Tab Completion: return a completion for partial words entered
 completer :: Monad m => WordCompleter m
 completer n = do
-    let names = [":quit", ":get", ":config"]
+    let names = [":quit", ":doc", ":docs", ":config"]
     return $ filter (isPrefixOf n) names
 
 ctx = Context "localhost" "7080" "mydb"
@@ -97,9 +97,15 @@ help args = liftIO $ print $ "Help: " ++ show args
 config :: [String] -> Repl ()
 config args = liftIO $ print ctx
 
-get :: [String] -> Repl ()
-get args = do
-    _ <- liftIO $ eval ctx (unwords args)
+docs :: [String] -> Repl ()
+docs args = do
+    _ <- liftIO $ eval ctx "docs"
+    return ()
+
+doc :: [String] -> Repl ()
+doc args = do
+    let docUrl = "docs/" ++ unwords args
+    _ <- liftIO $ eval ctx docUrl
     return ()
 
 quit :: [String] -> Repl ()
@@ -110,7 +116,8 @@ quit args = do
 
 options :: [(String, [String] -> Repl ())]
 options = [
-    ("get", get)          -- :get
+    ("doc", doc)          -- :doc
+    , ("docs", docs)      -- :docs
     , ("quit", quit)      -- :quit
     , ("help", help)      -- :help
     , ("config", config)  -- :config
