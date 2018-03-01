@@ -52,6 +52,9 @@ dbAddr = do
         db     <- getEnv "ASK_BARREL_db"
         return $ "http://" ++ host ++ ":" ++ port ++ "/dbs/" ++ db ++ "/"
 
+
+readDbAddr = dbAddr >>= putStrLn
+
 prettyPrint :: I.ByteString -> String
 prettyPrint "" = "empty json"
 prettyPrint a = C.unpack $ encodePretty ( decode a :: Maybe Value )
@@ -107,7 +110,9 @@ help :: [String] -> Repl ()
 help args = liftIO $ print $ "Help: " ++ show args
 
 config :: [String] -> Repl ()
-config args = liftIO $ print ""--getCtxIO
+config args = do
+    _ <- liftIO readDbAddr
+    return ()
 
 docs :: [String] -> Repl ()
 docs args = do
