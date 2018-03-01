@@ -23,22 +23,34 @@ import System.Console.Repline
 import System.Process (callCommand)
 import Data.List (isPrefixOf)
 import System.Exit
+import System.Environment
 
-data Context = Context {
-    host :: String,
-    port :: String,
-    db :: String
-}
+readArgs :: [String] -> IO ()
+readArgs [] = do
+                setEnv "ASK_BARREL_HOST" host
+                setEnv "ASK_BARREL_PORT" port
+                setEnv "ASK_BARREL_db" db
+                putStrLn $ "http://" ++ host ++ ":" ++ port ++ "/dbs/" ++ db
+              where
+                db = "mydb"
+                host = "localhost"
+                port = "7080"
+readArgs a = do
+                setEnv "ASK_BARREL_HOST" host
+                setEnv "ASK_BARREL_PORT" port
+                setEnv "ASK_BARREL_db" db
+                putStrLn $ "http://" ++ host ++ ":" ++ port ++ "/dbs/" ++ db
+             where
+                db = last a
+                host = head a
+                port = head $ tail a
 
-instance Show Context where
-    show (Context host port db) = host ++ ":" ++ port ++ " " ++ db
-
--- TODO create connection context
--- TODO split HTTP and barrel code
-
-dbAddr :: Context -> String
-dbAddr conf = "http://" ++ host conf ++ ":" ++ port conf
-  ++ "/dbs/" ++ db conf ++ "/"
+dbAddr :: IO String
+dbAddr = do
+        host   <- getEnv "ASK_BARREL_HOST"
+        port   <- getEnv "ASK_BARREL_PORT"
+        db     <- getEnv "ASK_BARREL_db"
+        return $ "http://" ++ host ++ ":" ++ port ++ "/dbs/" ++ db ++ "/"
 
 prettyPrint :: I.ByteString -> String
 prettyPrint "" = "empty json"
@@ -52,25 +64,25 @@ readResponse resp = do
         body = responseBody resp
 
 -- todo find exception type
-handleError e addr ctx = do
+handleError e addr = do
     putStr "Could not connect to "
     print addr
-    putStr "Configuration is "
-    print ctx
     putStrLn ""
     print e
 
-req addr manager ctx = do
+req input manager = do
+    db <- dbAddr
+    let addr = db ++ input
     request <- parseRequest addr
     eres <- tryAny $ httpLbs request manager
     case eres of
-       Left e -> handleError e addr ctx
+       Left e -> handleError e addr
        Right lbs -> readResponse lbs
 
-eval ctx input = do
-    let addr = dbAddr ctx ++ input
+--todo use monad
+eval input = do
     manager <- newManager defaultManagerSettings
-    req addr manager ctx
+    req input manager
 
 read' :: IO String
 read' = putStr "askBarrel> "
@@ -88,24 +100,24 @@ completer n = do
     let names = [":quit", ":doc", ":docs", ":config"]
     return $ filter (isPrefixOf n) names
 
-ctx = Context "localhost" "7080" "mydb"
+--ctx = Context "localhost" "7080" "mydb"
 
 -- Commands
 help :: [String] -> Repl ()
 help args = liftIO $ print $ "Help: " ++ show args
 
 config :: [String] -> Repl ()
-config args = liftIO $ print ctx
+config args = liftIO $ print ""--getCtxIO
 
 docs :: [String] -> Repl ()
 docs args = do
-    _ <- liftIO $ eval ctx "docs"
+    _ <- liftIO $ eval "docs"
     return ()
 
 doc :: [String] -> Repl ()
 doc args = do
     let docUrl = "docs/" ++ unwords args
-    _ <- liftIO $ eval ctx docUrl
+    _ <- liftIO $ eval docUrl
     return ()
 
 quit :: [String] -> Repl ()
@@ -138,4 +150,5 @@ repl :: IO ()
 repl = evalRepl ">>> " cmd options (Word0 completer) ini
 
 main :: IO ()
-main = repl
+main = do readArgs =<< getArgs -- set db config
+          repl
