@@ -74,7 +74,7 @@ handleError e addr = do
     putStrLn ""
     print e
 
-req input manager = do
+getRequest input manager = do
     db <- dbAddr
     let addr = db ++ input
     request <- parseRequest addr
@@ -84,9 +84,9 @@ req input manager = do
        Right lbs -> readResponse lbs
 
 --todo use monad
-eval input = do
+get input = do
     manager <- newManager defaultManagerSettings
-    req input manager
+    getRequest input manager
 
 read' :: IO String
 read' = putStr "askBarrel> "
@@ -117,13 +117,13 @@ config args = do
 
 docs :: [String] -> Repl ()
 docs args = do
-    _ <- liftIO $ eval "docs"
+    _ <- liftIO $ get "docs"
     return ()
 
 doc :: [String] -> Repl ()
 doc args = do
     let docUrl = "docs/" ++ unwords args
-    _ <- liftIO $ eval docUrl
+    _ <- liftIO $ get docUrl
     return ()
 
 quit :: [String] -> Repl ()
