@@ -25,8 +25,9 @@ import Data.List (isPrefixOf)
 import System.Exit
 import System.Environment
 
-readArgs :: [String] -> IO ()
-readArgs [] = do
+setConfig :: [String] -> IO ()
+-- default config
+setConfig [] = do
                 setEnv "ASK_BARREL_HOST" host
                 setEnv "ASK_BARREL_PORT" port
                 setEnv "ASK_BARREL_db" db
@@ -35,7 +36,7 @@ readArgs [] = do
                 db = "mydb"
                 host = "localhost"
                 port = "7080"
-readArgs a = do
+setConfig a = do
                 setEnv "ASK_BARREL_HOST" host
                 setEnv "ASK_BARREL_PORT" port
                 setEnv "ASK_BARREL_db" db
@@ -103,9 +104,9 @@ completer n = do
     let names = [":quit", ":doc", ":docs", ":config"]
     return $ filter (isPrefixOf n) names
 
---ctx = Context "localhost" "7080" "mydb"
-
 -- Commands
+
+--TODO fill help
 help :: [String] -> Repl ()
 help args = liftIO $ print $ "Help: " ++ show args
 
@@ -155,5 +156,5 @@ repl :: IO ()
 repl = evalRepl ">>> " cmd options (Word0 completer) ini
 
 main :: IO ()
-main = do readArgs =<< getArgs -- set db config
+main = do setConfig =<< getArgs -- set db config
           repl
