@@ -4,11 +4,14 @@
 It's currently read only under developpement. Basicaly a pet project to learn Haskell.
 
 ## deps
+
+```bash
 cabal install -flib-only http-client
 cabal install -flib-only enclosed-exceptions
 cabal install -flib-only aeson
 cabal install -flib-only aeson-pretty
 cabal install -flib-only repline
+```
 
 ## build
 
