@@ -4,7 +4,7 @@ module Main where
 
 -- json
 import Data.Aeson
-import GHC.Generics
+import GHC.Generics()
 
 -- pretty print
 import qualified Data.ByteString.Lazy.Char8 as C (unpack)
@@ -20,7 +20,6 @@ import Control.Exception.Enclosed
 -- REPL
 import Control.Monad.Trans
 import System.Console.Repline
-import System.Process (callCommand)
 import Data.List (isPrefixOf)
 import System.Exit
 import System.Environment
@@ -53,7 +52,7 @@ dbAddr = do
         db     <- getEnv "ASK_BARREL_db"
         return $ "http://" ++ host ++ ":" ++ port ++ "/dbs/" ++ db ++ "/"
 
-
+readDbAddr :: IO ()
 readDbAddr = dbAddr >>= putStrLn
 
 prettyPrint :: I.ByteString -> String
@@ -67,13 +66,14 @@ readResponse resp = do
         status = statusCode $ responseStatus resp
         body = responseBody resp
 
--- todo find exception type
+handleError :: (Show a2, Show a1) => a2 -> a1 -> IO ()
 handleError e addr = do
     putStr "Could not connect to "
     print addr
     putStrLn ""
     print e
 
+-- getRequest :: a => [Char] -> a -> IO ()
 getRequest input manager = do
     db <- dbAddr
     let addr = db ++ input
@@ -84,6 +84,7 @@ getRequest input manager = do
        Right lbs -> readResponse lbs
 
 --todo use monad
+get :: [Char] -> IO ()
 get input = do
     manager <- newManager defaultManagerSettings
     getRequest input manager
@@ -111,12 +112,12 @@ help :: [String] -> Repl ()
 help args = liftIO $ print $ "Help: " ++ show args
 
 config :: [String] -> Repl ()
-config args = do
+config _ = do
     _ <- liftIO readDbAddr
     return ()
 
 docs :: [String] -> Repl ()
-docs args = do
+docs _ = do
     _ <- liftIO $ get "docs"
     return ()
 
@@ -127,7 +128,7 @@ doc args = do
     return ()
 
 quit :: [String] -> Repl ()
-quit args = do
+quit _ = do
     _ <- liftIO $ putStrLn "Bye!"
     _ <- liftIO exitSuccess
     return ()
