@@ -1,0 +1,85 @@
+-- This file has been generated from package.yaml by hpack version 0.20.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 7f2b0b528b88cb34a85302d8ef82d74a0628b8a63fa7a0f38e1f792d092d101a
+
+name:           askBarrel
+version:        0.1.0.0
+description:    Please see the README on Github at <https://github.com/githubuser/askBarrel#readme>
+homepage:       https://github.com/githubuser/askBarrel#readme
+bug-reports:    https://github.com/githubuser/askBarrel/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2018 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+
+extra-source-files:
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/askBarrel
+
+library
+  hs-source-dirs:
+      src
+  build-depends:
+      aeson
+    , aeson-pretty
+    , base >=4.7 && <5
+    , bytestring
+    , enclosed-exceptions
+    , http-client
+    , http-types
+    , mtl
+    , repline
+  exposed-modules:
+      Lib
+  other-modules:
+      Paths_askBarrel
+  default-language: Haskell2010
+
+executable askBarrel-exe
+  main-is: Main.hs
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , aeson-pretty
+    , askBarrel
+    , base >=4.7 && <5
+    , bytestring
+    , enclosed-exceptions
+    , http-client
+    , http-types
+    , mtl
+    , repline
+  other-modules:
+      Paths_askBarrel
+  default-language: Haskell2010
+
+test-suite askBarrel-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , aeson-pretty
+    , askBarrel
+    , base >=4.7 && <5
+    , bytestring
+    , enclosed-exceptions
+    , http-client
+    , http-types
+    , mtl
+    , repline
+  other-modules:
+      Paths_askBarrel
+  default-language: Haskell2010

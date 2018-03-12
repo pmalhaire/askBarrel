@@ -3,26 +3,16 @@
 `askBarrel` is a command line tool to querry barrelDB using command line.
 It's currently read only under developpement. Basicaly a pet project to learn Haskell.
 
-## deps
-
-```bash
-cabal install -flib-only http-client
-cabal install -flib-only enclosed-exceptions
-cabal install -flib-only aeson
-cabal install -flib-only aeson-pretty
-cabal install -flib-only repline
-```
-
 ## build
 
 ```bash
-ghc askBarrel.hs
+stack build
 ```
 
 ## run
 
 ```bash
-./askBarrel
+stack exec askBarrel-exe
 ```
 
 ### example
