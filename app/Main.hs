@@ -12,7 +12,7 @@ import qualified Data.ByteString.Lazy.Internal as I (ByteString)
 import Data.Aeson.Encode.Pretty
 
 -- http
-import Network.HTTP.Client (newManager, defaultManagerSettings,
+import Network.HTTP.Client (newManager, Manager,defaultManagerSettings,
     responseStatus, responseBody, httpLbs, parseRequest)
 import Network.HTTP.Types.Status (statusCode)
 import Control.Exception.Enclosed
@@ -26,30 +26,21 @@ import System.Environment
 
 setConfig :: [String] -> IO ()
 -- default config
-setConfig [] = do
-                setEnv "ASK_BARREL_HOST" host
-                setEnv "ASK_BARREL_PORT" port
-                setEnv "ASK_BARREL_db" db
-                putStrLn $ "http://" ++ host ++ ":" ++ port ++ "/dbs/" ++ db
-              where
-                db = "mydb"
-                host = "localhost"
-                port = "7080"
 setConfig a = do
                 setEnv "ASK_BARREL_HOST" host
                 setEnv "ASK_BARREL_PORT" port
-                setEnv "ASK_BARREL_db" db
+                setEnv "ASK_BARREL_DB" db
                 putStrLn $ "http://" ++ host ++ ":" ++ port ++ "/dbs/" ++ db
-             where
-                db = last a
-                host = head a
-                port = head $ tail a
+              where
+                (host, port, db) = if null a
+                    then ("localhost", "7080", "mydb")
+                    else (last a, head a, head $ tail a)
 
 dbAddr :: IO String
 dbAddr = do
         host   <- getEnv "ASK_BARREL_HOST"
         port   <- getEnv "ASK_BARREL_PORT"
-        db     <- getEnv "ASK_BARREL_db"
+        db     <- getEnv "ASK_BARREL_DB"
         return $ "http://" ++ host ++ ":" ++ port ++ "/dbs/" ++ db ++ "/"
 
 readDbAddr :: IO ()
@@ -73,7 +64,7 @@ handleError e addr = do
     putStrLn ""
     print e
 
--- getRequest :: a => [Char] -> a -> IO ()
+getRequest :: String -> Manager -> IO ()
 getRequest input manager = do
     db <- dbAddr
     let addr = db ++ input
@@ -84,7 +75,7 @@ getRequest input manager = do
        Right lbs -> readResponse lbs
 
 --todo use monad
-get :: [Char] -> IO ()
+get :: String -> IO ()
 get input = do
     manager <- newManager defaultManagerSettings
     getRequest input manager
