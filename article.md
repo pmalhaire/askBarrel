@@ -208,7 +208,7 @@ instance Functor ((,) a) -- Defined in ‘GHC.Base’
 
 ##### practical example
 
-example : [] is a functor 
+example : [] is a functor
 
 
 Apply a function
@@ -239,7 +239,7 @@ An applicative `A` is an `enhanced` functor which :
         1 : fonctions functions from type `a` to type `b` `boxed` in the instance A1 of `A`
         2 : values of type `a` `boxed` in the instance A2 of `A`
     to :
-        values of type `b` `boxed` in the instance A3 of `A` 
+        values of type `b` `boxed` in the instance A3 of `A`
 
 ##### technical definition
 
@@ -260,6 +260,7 @@ instance Applicative IO -- Defined in ‘GHC.Base’
 instance Applicative ((->) a) -- Defined in ‘GHC.Base’
 instance Monoid a => Applicative ((,) a) -- Defined in ‘GHC.Base’
 ```
+
 ##### practical example
 
 example : Maybe is a an applicative it's used to have a `simple` box which is empty or contain a value. A list of one or zero value
@@ -271,7 +272,7 @@ Prelude> Nothing
 Nothing
 Prelude> :t Nothing
 Nothing :: Maybe a
-```haskell
+```
 
 
 `boxed` `A` with Maybe
@@ -281,7 +282,7 @@ Prelude> Just 1
 Just 1
 Prelude> :t Just 1
 Just 1 :: Num a => Maybe a
-Prelude> 
+Prelude>
 ```
 
 
@@ -330,7 +331,7 @@ the result are given this way
 
 A monoid `m` is composed :
 
-- `f` an associative binary (two parameters) function 
+- `f` an associative binary (two parameters) function
     associative means ( x `f` y ) `f` z = x `f` ( y `f` z) =  x `f` y `f` z
     binary means the function take two parameters
 
@@ -370,9 +371,9 @@ instance Monoid () -- Defined in ‘GHC.Base’
 
 ##### practical example
 
-string is a monoid 
+string is a monoid
 
-`++` is it's associative binary function 
+`++` is it's associative binary function
 
 ```haskell
 Prelude> "a" ++ ( "b"  ++ "c" )
@@ -406,10 +407,10 @@ A monad `M` for a type `a` is an `enhanced` applicative which :
 - has a `bind` function writen `>>=`
     from (
       a monad instance `m1` of `M` having `a` type inside
-      a function 
-        form 
-          `a` type 
-        to 
+      a function
+        form
+          `a` type
+        to
           an instance `m2` of `M` having a type `b` inside
     )
     to an instance `m3` of `M` having a type `b` inside
@@ -428,13 +429,13 @@ if success a
         if success b
               if success c
                 exit success
-              else 
+              else
                 exit failure c
-        else 
+        else
           exit failure b
-    else 
+    else
       exit failure c
-else 
+else
   exit failure a
 
 
@@ -483,7 +484,7 @@ rangePlus x (y, (a, b))
 Now we can do operations without caring if one fails in the middle
 
 ```haskell
-Prelude> return (1, (1,2)) >>= rangePlus 1 
+Prelude> return (1, (1,2)) >>= rangePlus 1
 Just (2,(1,2))
 Prelude> return (1, (1,2)) >>= rangePlus 1 >>= rangePlus 3
 Nothing
@@ -499,7 +500,7 @@ I want to write informations to a server only if the server responds.
 ```haskell
 see network/write_once.hs
 see network/write_loop.hs
-  
+
 ```
 
 Create a server allowing one client
