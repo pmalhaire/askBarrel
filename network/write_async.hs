@@ -8,16 +8,6 @@ import Network.Socket (AddrInfo, Socket, addrSocketType, addrAddress, addrProtoc
 import Network.Socket.ByteString (recv, sendAll)
 import Control.Concurrent
 
-run :: C.ByteString -> C.ByteString -> Socket -> IO C.ByteString
-run a b sock
-    | C.unpack a == "send" = do
-        --remove the :
-        let (_, content) = C.splitAt 1 b
-        sendAll sock content
-        return $ C.pack "sent"
-    | C.unpack a == "recv" = recv sock 100
-    | otherwise = return $ C.pack "unexpected command"
-
 resolve host port = do
     let hints = defaultHints { addrSocketType = Stream }
     addr:_ <- getAddrInfo (Just hints) (Just host) (Just port)
@@ -29,16 +19,22 @@ open addr = do
     connect sock $ addrAddress addr
     return sock
 
-talk :: Socket -> Chan Msg -> IO ()
-talk sock chan = do
-    putStrLn "Type a command send:your_content or recv"
-    line <- C.getLine
-    let (cmd,content) = C.splitAt 4 line
-    resp <- run cmd content sock
-    C.putStrLn resp
-    talk sock chan
+talk :: Socket -> IO ()
+talk sock = do
+    putStrLn "send your_content and wait for response"
+    content <- C.getLine
+    ack <- run sock content
+    C.putStrLn ack
+    talk sock
 
-
+run :: Socket -> C.ByteString -> IO C.ByteString
+run sock content = do
+    _ <- sendAll sock content
+    forkIO( do
+        resp <- recv sock 100
+        C.putStrLn resp )
+    return $ C.pack "sent"
+    
 main = do
     addr <- resolve "127.0.0.1" "3000"
     chan <- newChan        -- notice that newChan :: IO (Chan a)
@@ -48,6 +44,4 @@ type Msg = C.ByteString
 
 mainLoop :: AddrInfo -> Chan Msg -> IO ()   -- See how Chan now uses Msg.
 mainLoop addr chan = do
-    x <- open addr
-    talk x chan
-    --E.bracket (open addr) close talk
+    E.bracket (open addr) close talk
