@@ -1,86 +1,161 @@
-# Discovering Haskell while creating a repl DB client for barrelDB
+# A road trip in real world haskell : askBarrel a client for barrelDB
+
+1. [A road trip in real world haskell : askBarrel a client for barrelDB](#a-road-trip-in-real-world-haskell--askbarrel-a-client-for-barreldb)
+   1. [Introduction](#introduction)
+   2. [Where do I begin ?](#where-do-i-begin-)
+      1. [Let's take an example](#lets-take-an-example)
+      2. [reduce the problem](#reduce-the-problem)
+      3. [And the beginner is ... `Transport library`](#and-the-beginner-is--transport-library)
+   3. [Let's enter the Haskell world](#lets-enter-the-haskell-world)
+      1. [Haskell is `nerd` fun.](#haskell-is-nerd-fun)
+      2. [The smell of lisp](#the-smell-of-lisp)
+      3. [Meet the haskell syntax](#meet-the-haskell-syntax)
+         1. [The case of `$`](#the-case-of-)
+   4. [The monad universe](#the-monad-universe)
+      1. [A big picture](#a-big-picture)
+         1. [functor](#functor)
+         2. [applicative](#applicative)
+         3. [Monad](#monad)
+      2. [All programs begin with the `IO monad`](#all-programs-begin-with-the-io-monad)
+         1. [Huston there is a problem](#huston-there-is-a-problem)
+         2. [Interact with the shell](#interact-with-the-shell)
+   5. [Misc](#misc)
+   6. [Transport library](#transport-library)
+      1. [Getting inspired](#getting-inspired)
 
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=4 orderedList=false} -->
-
-<!-- code_chunk_output -->
-
-* [Discovering Haskell while creating a repl DB client for barrelDB](#discovering-haskell-while-creating-a-repl-db-client-for-barreldb)
-	* [introduction](#introduction)
-	* [Where do I begin ?](#where-do-i-begin)
-	* [Transport library](#transport-library)
-		* [Getting inspired](#getting-inspired)
-	* [Haskell is `nerd` fun](#haskell-is-nerd-fun)
-		* [The smell of lisp](#the-smell-of-lisp)
-		* [Equivalents things are beautifull](#equivalents-things-are-beautifull)
-			* [The case of `$`](#the-case-of)
-		* [The monad world](#the-monad-world)
-			* [functor](#functor)
-			* [applicative](#applicative)
-			* [monoid](#monoid)
-			* [Monad](#monad)
-
-<!-- /code_chunk_output -->
-
-## introduction
+## Introduction
 
 A year ago I created a POC for a repl client for the interesting barrelDB.
-It was a pet project, and gave me the opportunity to explore the basics of Haskell.
-A year after I made a kind of `ok but not great talk` about functionnal programming in `C++`.
-It seems like my interrest for functionnal programing stayed.
-I met the passionate @benoic for making this POC a real thing.
-After our discution I identified 7 subjects to be addressed.
+It was a pet project, and gave me the opportunity to explore Haskell basics.
+A year after I made a kind of `ok but not great talk` about functional programming in `C++`.
+I learned a lot doing it seems like my interest for functional programing stayed.
+I met @benoic the author of barrelDB which encourage me to make this POC a real thing.
+We discussed and our discussion I identified subjects to be addressed.
 
-3 mandatory :
-- Repl engine                   : interract with the shell
-- Command line parser           : parse writen sentences to usable haskell objects
-- Transport library             : sends and recieve
+mandatory :
+1. Repl engine                   : interact with the shell
+2. Command line parser           : parse written sentences to commands
+3. Query parser                  : parse DB queries
+4. Transport library             : sends and receive data from the DB server
 
-4 must have :
-- Document reader               : read and validate input documents before sending them
-- Concurency                    : allow several commands to run at the same time
-- Stream processing             : handle the case of stream
-- Post processing operations    : give the ability to do operations on the recieved documents
+must have :
+1. Document reader               : read and validate input documents before sending them
+2. Concurrency                   : allow several commands to run at the same time
+3. Stream processing             : handle the case of stream
+4. Post processing operations    : give the ability to do operations on the received documents
 
 ## Where do I begin ?
 
-To answers this question I used the dependency scheme : What can I do without needing the rest.
+### Let's take an example
 
-In the mandatory list I have only one candidate the `Transport library`.
+Let's make things more concrete. Let's create a db.
 
-It's needs a command as input.
+
+The `Repl engine` feeds the `Command line parser` with input strings :
+
+```bash
+barrelDB >>> create_db { "name" : "my_db" }
+```
+
+The `Command line parser` cuts the command in parts to feed the `Query parser`
+
+| command | data |
+|---|---|
+|create_db | { "name" : "my_db" } |
+
+The `Query parser` check the validity of the data given to the command and gives a buffer to the `Transport library`.
+
+| command  | check | status |
+|---|---|---|
+| create_db | has a name  |	&#10003; |
+| create_db | has name is not empty  |	&#10003; |
+
+
+The `Transport library` sends the query buffer to the `DB`
+```bash
+┌────────┬─────────────────────────┬─────────────────────────┬────────┬────────┐
+│00000000│ 7b 20 6e 61 6d 65 20 3a ┊ 20 6d 79 5f 64 62 20 7d │{ name :┊ my_db }│
+│00000010│ 0a                      ┊                         │_       ┊        │
+└────────┴─────────────────────────┴─────────────────────────┴────────┴────────┘
 
 ```
-create_db
+
+The `Transport library` receives the response buffer from the `DB` and the it to the `Command line parser`
+
+```bash
+┌────────┬─────────────────────────┬─────────────────────────┬────────┬────────┐
+│00000000│ 7b 20 72 65 73 75 6c 74 ┊ 20 3a 20 6f 6b 20 7d 0a │{ result┊ : ok }_│
+└────────┴─────────────────────────┴─────────────────────────┴────────┴────────┘
+
+```
+
+The `Command line parser` get the gives the response to the `Repl engine`
+
+| message | data |
+|---|---|
+| response | `{ "result" : "ok" }` |
+
+The `Repl engine` write the response to the shell
+
+```bash
+{ "result" : "ok" }
+```
+
+<!-- butchery analogy -->
+
+### reduce the problem
+
+<!-- my brain (small) my problem (big) -->
+
+Let's write the steps from our example.
+
+1. get query `q` from the user
+2. connect to the DB
+3. send `q` to the DB server
+4. get response `r` from the DB server
+5. write `r` to the shell
+6. close the program
+
+
+After an intense usage agile no bullshit disruptive methodology.
+I faced to a terrible conclusion.
+
+If I can't talk to the `DB server` this project is dead.
+
+<!-- muted crossed scotch head in a form of a DB -->
+
+### And the beginner is ... `Transport library`
+
+To simulate my DB I'll use create_db command :
+
+Input:
+
+```json
 {
-    "name" : "my_db"
+  "name" : "my_db"
 }
 ```
 
-And and output
+Possible outputs:
 
-```
+```json
 {
-    "result" : "ok"
+  "result" : "ok"
 }
 ```
 
-The `Repl engine` needs the command line parser to form commands from input strings.
+```json
+{
+  "result" : "fail"
+}
+```
 
-The `Command line parse` needs to send real commands to be developped a pragmatic way.
+## Let's enter the Haskell world
 
-## Transport library
+### Haskell is `nerd` fun.
 
-### Getting inspired
-
-`barrelDB` has similarities with `couchDB` and there is an haskell implementation for [it](http://hackage.haskell.org/package/CouchDB-1.2.2/docs/Database-CouchDB.html)
-
-The part concerning the transport layer is [here](hackage.haskell.org/package/CouchDB-1.2.2/docs/src/Database-CouchDB-HTTP.html).
-
-It consists of a monad based encapsulating the IO monad and a connection.
-
-
-## Haskell is `nerd` fun
+When you learn new languages it's practical to use analogies from one language to an other. In haskell you can't unless you've studied an other functional language. For a curious person sad that nodeJS took the world with it's ugly code this make things exiting. I learn something new each time I code in Haskell.
 
 ### The smell of lisp
 
@@ -88,7 +163,6 @@ Haskell has reminds me the time I studied lisp in the IA course of professor [Tu
 
 
 Lets have a look a it in ghci see this [link](https://www.haskell.org/platform/) to install haskell.
-
 
 ```bash
 ghci
@@ -117,9 +191,11 @@ clisp
 It's one of the many reasons why `lisp`and `haskell` community are connected.
 
 
-### Equivalents things are beautifull
+### Meet the haskell syntax
 
-Haskell has some operators which I found really from a graphical point of view
+Haskell is a rich universe with many entrance doors.
+
+I'll give you mine which is somehow singular : Haskell syntax is graphically beautiful.
 
 #### The case of `$`
 
@@ -131,14 +207,14 @@ ghci
 25.0
 ```
 
-Here parentesis are clearly needed :
+Here parenthesis are clearly needed :
 
 ```bash
 λ> 1000 / 100 / 5 / 2
 1.0
 ```
 
-Let me introduce `$`. It's an operator to use less parenthesis, it basicaly wraps what is after it with parentesis.
+Let me introduce `$`. It's an operator to use less parenthesis, it wraps what is after it with parenthesis.
 
 
 Let's write it lisp's way
@@ -157,7 +233,7 @@ With `$` you can simplify the writing :
 25.0
 ```
 
-Notice that in this example `$` gets applied before the parentesis.
+Notice that in this example `$` gets applied before the parenthesis.
 
 `$` twice :
 
@@ -166,20 +242,25 @@ Notice that in this example `$` gets applied before the parentesis.
 25.0
 ```
 
-It seams like a toy, but it's actualy very usefull in `haskell`.
+It seams like a toy, but it's very useful in `haskell`.
 
 
 For more details see [`infix functions`](https://wuciawe.github.io/functional%20programming/haskell/2016/07/03/infix-functions-in-haskell.html).
 
-### The monad world
+## The monad universe
 
-Monad has became with years a mythical creature of programming concepts. I won't lie it's not a pain free to learn... and to say the truth I did had the chance to demonstrate how useful it is. It's definetely conceptual interresting as it mixes many concepts most programmers manupulate whithout understanding them.
+Monad has became a mythical creature in programming concepts universe. I used it to look smart when I did not understand it at all. (I wonder if I lied to others or to myself when I said I knew what monad were)
 
-I won't explain it as but I'll expose the concepts monads contains to let your brain picture it like a puzzle.
+I won't lie, it's not a pain free to learn it. And to be honest I am not entirely comfortable with it. But it's conceptually interesting and helped me to approach many concepts I didn't even note before.
 
+I'll expose one by one the concepts behind monads. Your brain will slowly be surely assemble the puzzle. You'll fell fireworks in your brain. Don't panic it's normal.
+
+### A big picture
+
+<!-- draw inclusion of concepts -->
 Illustration:
 
-(Monad (monoid (applicative (functor))))
+(Monad (applicative (functor)))
 
 
 #### functor
@@ -236,7 +317,7 @@ An applicative `A` is an `enhanced` functor which :
 - has a function from `a` to `A` ( kind of from `a` to `boxed` `a` )
 - has a function
     from :
-        1 : fonctions functions from type `a` to type `b` `boxed` in the instance A1 of `A`
+        1 : functions from type `a` to type `b` `boxed` in the instance A1 of `A`
         2 : values of type `a` `boxed` in the instance A2 of `A`
     to :
         values of type `b` `boxed` in the instance A3 of `A`
@@ -263,7 +344,7 @@ instance Monoid a => Applicative ((,) a) -- Defined in ‘GHC.Base’
 
 ##### practical example
 
-example : Maybe is a an applicative it's used to have a `simple` box which is empty or contain a value. A list of one or zero value
+example : Maybe is a an applicative it's used to have a `simple` box which is empty or contain a value. A list of one or zero value.
 
 an empty `Maybe` value is `Nothing`.
 
@@ -286,14 +367,14 @@ Prelude>
 ```
 
 
-An applicative usage compare without `unboxing`
+An applicative usage : compare inside the `box`
 
 ```haskell
 Prelude> (==) <$> (Just 1) <*> (Just 2)
 Just False
 ```
 
-An applicative usage test values without `unboxing`
+An applicative usage : test inside the `box`
 
 ```haskell
 Prelude> [ (>2)] <*> [1,2,3]
@@ -326,85 +407,13 @@ the result are given this way
     (2,100):102,
 ]
 
-
-#### monoid
-
-A monoid `m` is composed :
-
-- `f` an associative binary (two parameters) function
-    associative means ( x `f` y ) `f` z = x `f` ( y `f` z) =  x `f` y `f` z
-    binary means the function take two parameters
-
-- `e` an element that act as identity for `f`
-    identity means `f` `e` = `e`
-
-- an `unlist` function which take a list of instances of `m` and returns an instance of `m`
-
-
-##### technical definition
-
-```haskell
-Prelude> :i Monoid
-class Semigroup a => Monoid a where
-  mempty :: a
-  mappend :: a -> a -> a
-  mconcat :: [a] -> a
-  {-# MINIMAL mempty #-}
-  	-- Defined in ‘GHC.Base’
-instance Monoid [a] -- Defined in ‘GHC.Base’
-instance Monoid Ordering -- Defined in ‘GHC.Base’
-instance Semigroup a => Monoid (Maybe a) -- Defined in ‘GHC.Base’
-instance Monoid a => Monoid (IO a) -- Defined in ‘GHC.Base’
-instance Monoid b => Monoid (a -> b) -- Defined in ‘GHC.Base’
-instance (Monoid a, Monoid b, Monoid c, Monoid d, Monoid e) =>
-         Monoid (a, b, c, d, e)
-  -- Defined in ‘GHC.Base’
-instance (Monoid a, Monoid b, Monoid c, Monoid d) =>
-         Monoid (a, b, c, d)
-  -- Defined in ‘GHC.Base’
-instance (Monoid a, Monoid b, Monoid c) => Monoid (a, b, c)
-  -- Defined in ‘GHC.Base’
-instance (Monoid a, Monoid b) => Monoid (a, b)
-  -- Defined in ‘GHC.Base’
-instance Monoid () -- Defined in ‘GHC.Base’
-```
-
-##### practical example
-
-string is a monoid
-
-`++` is it's associative binary function
-
-```haskell
-Prelude> "a" ++ ( "b"  ++ "c" )
-"abc"
-Prelude> ( "a" ++ "b" )  ++ "c"
-"abc"
-```
-
-
-`++` "" is identity
-
-```haskell
-Prelude> "a" ++ ""
-"a"
-```
-
-mconcat is the `unlist` function
-
-
-```haskell
-Prelude> mconcat  ["aa","b"]
-"aab"
-```
-
 #### Monad
 
-We got to the famous grall of monads. It took me forever to get to understand what they are. Hopefully, you'll get there before me with this shortcut.
+We got to the famous graal of monads. It took me forever to get to understand what they are. Hopefully, you'll get there before me with this shortcut.
 
 A monad `M` for a type `a` is an `enhanced` applicative which :
 
-- has a `bind` function writen `>>=`
+- has a `bind` function written `>>=`
     from (
       a monad instance `m1` of `M` having `a` type inside
       a function
@@ -415,14 +424,14 @@ A monad `M` for a type `a` is an `enhanced` applicative which :
     )
     to an instance `m3` of `M` having a type `b` inside
 
-- a `replacement` function writem `>>`
+- a `replacement` function written `>>`
     from
       a monad instance `m1` of `M` having `a` type inside
       a monad instance `m2` of `M` having `b` type inside
     to
       a monad instance `m3` of `M` having `b` type inside
 
-The goal of monad is to chain operations allowing any to fail whithout having to define the failure case for each as in this classical pyramid of doom :
+The goal of monad is to chain operations allowing any to fail without having to define the failure case for each as in this classical pyramid of doom :
 
 
 if success a
@@ -492,9 +501,51 @@ Nothing
 
 We have an Int with a context and we can make operation as if the context was not present.
 
+
+### All programs begin with the `IO monad`
+
+There is a special monad that we need in haskell the `IO monad`.
+
+Any program begin with it as it's the signature of main :
+
+```haskell
+main :: IO ()
+```
+
+#### Huston there is a problem
+
+Haskell is about avoiding side effects ... but print to a terminal has side effects.
+We don't want side effects but we want to print to the terminal.
+
+<!-- illustrate the cake and the money of the cake -->
+
+Here comes the `IO monad` it encapsulate the "`IO operations`" in a box.
+We can put things in this box and haskell will manage it.
+
+#### Interact with the shell
+
+example : mix constant and user string.
+
+Strings in haskell are immutable : each time I apply a function over a `String` I'll always get the same result.
+
+```haskell
+:t "hello"
+"hello" :: [Char]
+```
+
+The only problem is that I may want to use a string written by the user. I can't know what it will be.
+It's hell for `haskell`.
+
+<!-- draw a priest with a cross in front of a guy writing to his keyboard -->
+
+But well ... it's nice to able to speak with the user.
+
+
+## Misc
+
 An other example.
 
-I want to write informations to a server only if the server responds.
+I want to write to a server only it responds.
 
 
 ```haskell
@@ -522,3 +573,12 @@ Create a server with 2 distinct channels using file ch1 and ch2
 socat -u tcp-l:3000,fork,reuseaddr system:'bash -c \"tee >(grep -oP \\\"(?<=#1).*?(?=#)\\\" > ch1) >(grep -oP \\\"(?<=#2).*?(?=#)\\\" > ch2) > /dev/null\"'
 ```
 
+## Transport library
+
+### Getting inspired
+
+`barrelDB` has similarities with `couchDB` and there is an haskell implementation for [it](http://hackage.haskell.org/package/CouchDB-1.2.2/docs/Database-CouchDB.html)
+
+The part concerning the transport layer is [here](hackage.haskell.org/package/CouchDB-1.2.2/docs/src/Database-CouchDB-HTTP.html).
+
+It consists of a monad based encapsulating the IO monad and a connection.
