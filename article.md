@@ -1,42 +1,41 @@
-# A road trip in real world haskell : askBarrel a client for barrelDB
+# A road trip in Haskell : askBarrel a REPL client for barrelDB
 
-1. [Introduction](#introduction)
-2. [Where do I begin ?](#where-do-i-begin-)
-   1. [Let's take an example](#lets-take-an-example)
-   2. [reduce the problem](#reduce-the-problem)
-   3. [And the beginner is ... `Transport library`](#and-the-beginner-is--transport-library)
-3. [Let's enter the Haskell world](#lets-enter-the-haskell-world)
-   1. [Haskell is `nerd` fun.](#haskell-is-nerd-fun)
-   2. [The smell of lisp](#the-smell-of-lisp)
-   3. [Meet the haskell syntax](#meet-the-haskell-syntax)
-      1. [The case of `$`](#the-case-of-)
-4. [The monad universe](#the-monad-universe)
-   1. [A big picture](#a-big-picture)
-      1. [functor](#functor)
-         1. [technical definition](#technical-definition)
-         2. [practical example](#practical-example)
-      2. [applicative](#applicative)
-         1. [technical definition](#technical-definition-1)
-         2. [practical example](#practical-example-1)
-      3. [Monad](#monad)
-         1. [technical definition](#technical-definition-2)
-         2. [practical example](#practical-example-2)
-   2. [All programs begin with the `IO monad`](#all-programs-begin-with-the-io-monad)
-      1. [Huston there is a problem](#huston-there-is-a-problem)
-      2. [Interact with the shell](#interact-with-the-shell)
-5. [Misc](#misc)
-6. [Transport library](#transport-library)
-   1. [Getting inspired](#getting-inspired)
+- [A road trip in Haskell : askBarrel a REPL client for barrelDB](#a-road-trip-in-haskell--askbarrel-a-repl-client-for-barreldb)
+  - [Introduction](#introduction)
+  - [Looking through the window](#looking-through-the-window)
+    - [A basic example](#a-basic-example)
+    - [reduce the problem](#reduce-the-problem)
+  - [Let's enter the Haskell world](#lets-enter-the-haskell-world)
+    - [Haskell is `nerd` fun.](#haskell-is-nerd-fun)
+    - [The smell of lisp](#the-smell-of-lisp)
+    - [Meet the haskell syntax](#meet-the-haskell-syntax)
+      - [The case of `$`](#the-case-of)
+  - [The monad universe](#the-monad-universe)
+    - [A big picture](#a-big-picture)
+      - [functor](#functor)
+        - [technical definition](#technical-definition)
+        - [practical example](#practical-example)
+      - [applicative](#applicative)
+        - [technical definition](#technical-definition-1)
+        - [practical example](#practical-example-1)
+      - [Monad](#monad)
+        - [technical definition](#technical-definition-2)
+        - [practical example](#practical-example-2)
+    - [All programs begin with the `IO monad`](#all-programs-begin-with-the-io-monad)
+      - [Huston there is a problem](#huston-there-is-a-problem)
+      - [Interact with the shell](#interact-with-the-shell)
+  - [WIP Misc](#wip-misc)
+  - [Transport library](#transport-library)
+    - [Getting inspired](#getting-inspired)
 
 
 ## Introduction
 
-A year ago I created a POC for a repl client for the interesting barrelDB.
-It was a pet project, and gave me the opportunity to explore Haskell basics.
-A year after I made a kind of `ok but not great talk` about functional programming in `C++`.
-I learned a lot doing it seems like my interest for functional programing stayed.
-I met @benoic the author of barrelDB which encourage me to make this POC a real thing.
-We discussed and our discussion I identified subjects to be addressed.
+A year ago I created a POC for a repl client for the interesting barrelDB. It was a pet project, and gave me the opportunity to explore Haskell basics.
+
+A year after I made a kind of `ok but not great talk` about functional programming in `C++`. I learned a lot doing it seems like my interest for functional programing stayed.
+
+I met @benoic the author of barrelDB which encourage me to make this POC a real thing. We discussed and I identified subjects to be addressed.
 
 mandatory :
 1. Repl engine                   : interact with the shell
@@ -50,55 +49,57 @@ must have :
 3. Stream processing             : handle the case of stream
 4. Post processing operations    : give the ability to do operations on the received documents
 
-## Where do I begin ?
+## Looking through the window
 
-### Let's take an example
+Now that I know what I have to do. Where do I begin ?
+
+Let's take an example.
+
+### A basic example
 
 Let's make things more concrete. Let's create a db.
 
-
-The `Repl engine` feeds the `Command line parser` with input strings :
+The `Repl engine` feeds the `Command line parser` with input strings.
 
 ```bash
 barrelDB >>> create_db { "name" : "my_db" }
 ```
 
-The `Command line parser` cuts the command in parts to feed the `Query parser`
+The `Command line parser` cuts the command in parts to feed the `Query parser`.
 
-| command | data |
-|---|---|
-|create_db | { "name" : "my_db" } |
+| command   | data                 |
+| --------- | -------------------- |
+| create_db | { "name" : "my_db" } |
 
 The `Query parser` check the validity of the data given to the command and gives a buffer to the `Transport library`.
 
-| command  | check | status |
-|---|---|---|
-| create_db | has a name  |	&#10003; |
-| create_db | has name is not empty  |	&#10003; |
+| command   | check                 | status   |
+| --------- | --------------------- | -------- |
+| create_db | has a name            | &#10003; |
+| create_db | has name is not empty | &#10003; |
 
 
-The `Transport library` sends the query buffer to the `DB`
+The `Transport library` sends the query buffer to the `DB`.
+
 ```bash
 ┌────────┬─────────────────────────┬─────────────────────────┬────────┬────────┐
 │00000000│ 7b 20 6e 61 6d 65 20 3a ┊ 20 6d 79 5f 64 62 20 7d │{ name :┊ my_db }│
 │00000010│ 0a                      ┊                         │_       ┊        │
 └────────┴─────────────────────────┴─────────────────────────┴────────┴────────┘
-
 ```
 
-The `Transport library` receives the response buffer from the `DB` and the it to the `Command line parser`
+The `Transport library` receives the response buffer from the `DB` and the it to the `Command line parser`.
 
 ```bash
 ┌────────┬─────────────────────────┬─────────────────────────┬────────┬────────┐
 │00000000│ 7b 20 72 65 73 75 6c 74 ┊ 20 3a 20 6f 6b 20 7d 0a │{ result┊ : ok }_│
 └────────┴─────────────────────────┴─────────────────────────┴────────┴────────┘
-
 ```
 
-The `Command line parser` get the gives the response to the `Repl engine`
+The `Command line parser` get the gives the response to the `Repl engine`.
 
-| message | data |
-|---|---|
+| message  | data                  |
+| -------- | --------------------- |
 | response | `{ "result" : "ok" }` |
 
 The `Repl engine` write the response to the shell
@@ -123,40 +124,16 @@ Let's write the steps from our example.
 6. close the program
 
 
-After an intense usage agile no bullshit disruptive methodology.
-I faced to a terrible conclusion.
-
-If I can't talk to the `DB server` this project is dead.
+After an intense usage of - agile no bullshit disruptive methodology - I faced to a terrible conclusion :
+  If I can't talk to the `DB server` this project is dead.
 
 <!-- muted crossed scotch head in a form of a DB -->
 
-### And the beginner is ... `Transport library`
-
-To simulate my DB I'll use create_db command :
-
-Input:
-
-```json
-{
-  "name" : "my_db"
-}
-```
-
-Possible outputs:
-
-```json
-{
-  "result" : "ok"
-}
-```
-
-```json
-{
-  "result" : "fail"
-}
-```
+Step 3 and 4 are the one to begin with so the beginner is ... `Transport library`.
 
 ## Let's enter the Haskell world
+
+Now that we know what is to de done let's take a breath and introduce Haskell.
 
 ### Haskell is `nerd` fun.
 
@@ -416,6 +393,20 @@ the result are given this way
 
 We got to the famous graal of monads. It took me forever to get to understand what they are. Hopefully, you'll get there before me with this shortcut.
 
+A monad is like a medicine pack. It's a box with constrains on how to use it's content.
+
+<!-- Problems with your code ? use monad ! Twice a day it make your code flow
+ ___________
+|\   \      |
+| \ M \     |
+|  \ O \    |
+|   \ N \   |
+|    \ A \  |
+|     \ D \ |
+|      \   \|
+|___________|
+-->
+
 A monad `M` for a type `a` is an `enhanced` applicative which :
 
 - has a `bind` function written `>>=`
@@ -437,7 +428,6 @@ A monad `M` for a type `a` is an `enhanced` applicative which :
       a monad instance `m3` of `M` having `b` type inside
 
 The goal of monad is to chain operations allowing any to fail without having to define the failure case for each as in this classical pyramid of doom :
-
 
 if success a
         if success b
@@ -480,7 +470,7 @@ This range will be our context.
 
 
 ```haskell
-
+-- use :{ and :} to use this code in ghci
 :{
 type Range = (Int, Int)
 type RangeNum = (Int, Range)
@@ -492,7 +482,6 @@ rangePlus x (y, (a, b))
   | otherwise        = Nothing
 
 :}
-
 ```
 
 Now we can do operations without caring if one fails in the middle
@@ -544,6 +533,7 @@ It's hell for `haskell`.
 <!-- draw a priest with a cross in front of a guy writing to his keyboard -->
 
 But well ... it's nice to able to speak with the user.
+
 
 
 ## WIP Misc
