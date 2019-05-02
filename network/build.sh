@@ -11,7 +11,7 @@ usage () {
 	echo if [name] is ommited will build all files.
 }
 
-[ ! -z "$1" ] && [ -n "$1.hs" ] && \
+[ ! -z "$1" ] && [ ! -f ./$1.hs ] && \
 	echo -e "\e[41m$1.hs not found\e[0m" && usage && exit 1
 
 mkdir -p bin
