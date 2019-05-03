@@ -4,7 +4,7 @@ import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as C
 import qualified Network.Socket as NS
 import Network.Socket.ByteString (recv, sendAll)
-import Control.Concurrent
+import Control.Concurrent.Async
 
 -- avoid mixing :
 -- putStrLn :: String -> IO()
@@ -31,31 +31,55 @@ open addr = do
     NS.connect sock $ NS.addrAddress addr
     return sock
 
-run :: NS.Socket -> C.ByteString -> IO C.ByteString
-run sock content = do
-    _ <- sendAll sock content
-    -- wait for response asyncronously
-    forkIO( do
-        resp <- recv sock 100
-        C.putStrLn resp )
-    return $ C.pack "sent"
+push :: NS.Socket -> C.ByteString -> IO ()
+push sock content = do
+    -- dropping the result may not be good
+    x <- sendAll sock content
+    return x
 
-talk :: NS.Socket -> IO ()
-talk sock = do
+prompt = "\x1b[0;33m>>>\x1b[0m"
+back = "\r\x1b[0;32m<<<\x1b[0m"
+
+sender :: NS.Socket -> IO ()
+sender sock = do
     -- prompt string
-    C.putStr $ C.pack ">>>"
+    C.putStr $ C.pack prompt
     -- get string from command line
     content <- C.getLine
-    -- send data
-    ack <- run sock content
-    -- show ack
-    C.putStrLn ack
+    if content == C.pack "quit"
+        then return ()
+        else do
+            push sock content
+            sender sock
 
-    talk sock
+get :: NS.Socket -> IO C.ByteString
+get sock = do
+    resp <- recv sock 1024
+    return resp
+
+reciever :: NS.Socket -> IO ()
+reciever sock = do
+    resp <- get sock
+    -- response on other line
+    C.putStr $ C.pack back
+    C.putStrLn resp
+    C.putStr $ C.pack prompt
+    if resp == C.pack ""
+        then return ()
+        else reciever sock
+
+run :: NS.Socket -> IO ()
+run sock = do
+    async(reciever sock)
+    sender sock
+
 
 mainLoop :: NS.AddrInfo -> IO ()
 mainLoop addr = do
-    E.bracket (open addr) NS.close talk
+    let sock = open addr
+    -- send data asyncronously
+    E.bracket sock NS.close run
+
 
 main :: IO()
 main = do
