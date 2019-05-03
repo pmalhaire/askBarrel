@@ -5,8 +5,8 @@ import qualified Data.ByteString.Char8 as C
 import qualified Network.Socket as NS
 import Network.Socket.ByteString (recv, sendAll)
 import Control.Concurrent
-import Control.Concurrent.Chan
 import Control.Monad.Fix (fix)
+import Control.Concurrent.Async
 
 -- avoid mixing :
 -- putStrLn :: String -> IO()
@@ -36,7 +36,6 @@ open addr = do
 push :: NS.Socket -> C.ByteString -> IO ()
 push sock content = do
     -- dropping the result may not be good
-    --C.putStr msg
     x <- sendAll sock content
     return x
 
@@ -63,16 +62,17 @@ run sock = do
     let broadcast msg = writeChan chan msg
     commLine <- dupChan chan
     -- send
-    forkIO $ fix $ \loop -> do
+    sendThread <- async $ fix $ \loop -> do
         C.putStr $ C.pack prompt
         line <- C.getLine
         if line == C.pack "quit"
-            then return ()
+            then do
+                return ()
             else do
                 sender sock line
                 loop
     -- recieve
-    fix $ \loop -> do
+    recieveThread <- async $ fix $ \loop -> do
         line <- reciever sock
         if line == C.pack ""
             then return ()
@@ -81,6 +81,10 @@ run sock = do
                  C.putStrLn line
                  C.putStr $ C.pack prompt
                  loop
+
+    wait sendThread
+    cancel recieveThread
+
 
 mainLoop :: NS.AddrInfo -> IO ()
 mainLoop addr = do

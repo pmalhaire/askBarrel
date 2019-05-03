@@ -8,6 +8,7 @@ import Control.Concurrent
 import Control.Concurrent.Chan
 import Control.Monad.Fix (fix)
 import Control.Monad (forever, void)
+import Control.Concurrent.Async
 
 -- avoid mixing :
 -- putStrLn :: String -> IO()
@@ -23,7 +24,7 @@ input   = "\x1b[0;32m<<<\x1b[0m"
 close   = "\x1b[0;94mx-x\x1b[0m"
 
 connect = "\x1b[0;36m-<>-\x1b[0m"
-comm    = "\x1b[0;36m-||-\x1b[0m"
+comm    = "\x1b[0;36m || \x1b[0m"
 end     = "\x1b[0;36m-><-\x1b[0m"
 
 sender :: NS.Socket -> C.ByteString -> IO ()
@@ -48,10 +49,10 @@ talk conn name = do
     commLine <- dupChan chan
 
     -- fork off a thread for reading from the duplicated channel
-    forkIO $ fix $ \loop -> do
+    get <- async $ fix $ \loop -> do
         line <- readChan commLine
         -- quit case
-        if line == C.pack "quit"
+        if line == C.pack ""
             then return ()
             else do
                 C.putStrLn $ C.concat [(C.pack comm), (C.pack name),(C.pack back),line]
@@ -59,16 +60,19 @@ talk conn name = do
                 loop
 
     -- read lines from the socket and echo them back to the user
-    fix $ \loop -> do
+    put <- async $ fix $ \loop -> do
         line <- reciever conn
         if line == C.pack ""
             then do
                 C.putStrLn $ C.concat [(C.pack end), (C.pack name), (C.pack close), (C.pack "connection closed")]
+                broadcast $ C.pack ""
                 return ()
             else do
                  C.putStrLn $ C.concat [(C.pack comm), (C.pack name),(C.pack input),line]
                  broadcast $ C.append (C.pack "recieved:") line
                  loop
+    wait put
+    cancel get
 
 resolve :: String -> IO NS.AddrInfo
 resolve port = do
