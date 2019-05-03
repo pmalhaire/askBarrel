@@ -57,12 +57,6 @@ reciever sock = do
     resp <- get sock
     return resp
 
-
---run :: NS.Socket -> IO ()
---run sock = do
---    async(reciever sock)
---    sender sock
-
 run :: NS.Socket -> IO ()
 run sock = do
     chan <- newChan

@@ -33,35 +33,17 @@ open addr = do
     NS.connect sock $ NS.addrAddress addr
     return sock
 
-push :: NS.Socket -> C.ByteString -> IO ()
-push sock content = do
-    -- dropping the result may not be good
-    --C.putStr msg
-    x <- sendAll sock content
-    return x
-
 prompt = "\x1b[0;33m>>>\x1b[0m"
 back = "\r\x1b[0;32m<<<\x1b[0m"
 
 sender :: NS.Socket -> C.ByteString -> IO ()
 sender sock msg = do
-    push sock msg
-
-get :: NS.Socket -> IO C.ByteString
-get sock = do
-    resp <- recv sock 1024
-    return resp
+    sendAll sock msg
 
 reciever :: NS.Socket -> IO C.ByteString
 reciever sock = do
-    resp <- get sock
-    return resp
+    recv sock 1024
 
-
---run :: NS.Socket -> IO ()
---run sock = do
---    async(reciever sock)
---    sender sock
 
 run :: NS.Socket -> IO ()
 run sock = do
@@ -69,18 +51,15 @@ run sock = do
     let broadcast msg = writeChan chan msg
     commLine <- dupChan chan
 
-    -- create a hello client
-
-    -- fork off a thread for reading from the duplicated channel
     forkIO $ fix $ \loop -> do
         line <- readChan commLine
+        -- quit case
         if line == C.pack "quit"
             then return ()
             else do
                 sender sock line
                 loop
 
-    -- read lines from the socket and echo them back to the user
     fix $ \loop -> do
         line <- reciever sock
         if line == C.pack ""
@@ -94,7 +73,7 @@ run sock = do
 mainLoop :: NS.AddrInfo -> IO ()
 mainLoop addr = do
     let sock = open addr
-    -- send data asyncronously
+    -- handle closing
     E.bracket sock NS.close run
 
 
