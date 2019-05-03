@@ -62,10 +62,8 @@ run sock = do
     chan <- newChan
     let broadcast msg = writeChan chan msg
     commLine <- dupChan chan
-
-    -- fork off a thread for reading from the duplicated channel
+    -- send
     forkIO $ fix $ \loop -> do
-        --broadcast $ C.pack prompt
         C.putStr $ C.pack prompt
         line <- C.getLine
         if line == C.pack "quit"
@@ -73,8 +71,7 @@ run sock = do
             else do
                 sender sock line
                 loop
-
-    -- read lines from the socket and echo them back to the user
+    -- recieve
     fix $ \loop -> do
         line <- reciever sock
         if line == C.pack ""
