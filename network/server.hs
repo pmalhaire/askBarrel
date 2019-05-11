@@ -45,7 +45,7 @@ run sock =  forever $ do
 
 talk conn name = do
     chan <- newChan
-    let broadcast msg = writeChan chan msg
+    let broadcast = writeChan chan
     commLine <- dupChan chan
 
     -- fork off a thread for reading from the duplicated channel
@@ -55,7 +55,7 @@ talk conn name = do
         if line == C.pack ""
             then return ()
             else do
-                C.putStrLn $ C.concat [(C.pack comm), (C.pack name),(C.pack back),line]
+                C.putStrLn $ C.concat [C.pack comm, C.pack name,C.pack back,line]
                 sender conn line
                 loop
 
@@ -64,11 +64,11 @@ talk conn name = do
         line <- reciever conn
         if line == C.pack ""
             then do
-                C.putStrLn $ C.concat [(C.pack end), (C.pack name), (C.pack close), (C.pack "connection closed")]
+                C.putStrLn $ C.concat [C.pack end, C.pack name, C.pack close, C.pack "connection closed"]
                 broadcast $ C.pack ""
                 return ()
             else do
-                 C.putStrLn $ C.concat [(C.pack comm), (C.pack name),(C.pack input),line]
+                 C.putStrLn $ C.concat [C.pack comm, C.pack name,C.pack input, line]
                  broadcast $ C.append (C.pack "recieved:") line
                  loop
     wait put
@@ -78,6 +78,7 @@ resolve :: String -> IO NS.AddrInfo
 resolve port = do
     let hints = NS.defaultHints {
             NS.addrFlags = [NS.AI_PASSIVE]
+            , NS.addrFamily = NS.AF_INET
             , NS.addrSocketType = NS.Stream
             }
     addr:_ <- NS.getAddrInfo (Just hints) Nothing (Just port)
