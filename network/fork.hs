@@ -1,17 +1,14 @@
 module Main (main) where
 
 import qualified Control.Exception as E
-import qualified Data.ByteString.Char8 as C
+import qualified Data.ByteString.Lazy.Char8 as C
+import qualified Data.ByteString.Char8 as NC
 import qualified Network.Socket as NS
-import Network.Socket.ByteString (recv, sendAll)
+import Network.Socket.ByteString.Lazy (recv)
+import Network.Socket.ByteString (sendAll)
 import Control.Concurrent
 import Control.Monad.Fix (fix)
 import Control.Concurrent.Async
-
--- avoid mixing :
--- putStrLn :: String -> IO()
--- C.putStrLn :: ByteString -> IO()
-import Prelude hiding (putStrLn)
 
 type Msg = C.ByteString
 
@@ -33,47 +30,27 @@ open addr = do
     NS.connect sock $ NS.addrAddress addr
     return sock
 
-push :: NS.Socket -> C.ByteString -> IO ()
-push sock content = do
-    -- dropping the result may not be good
-    x <- sendAll sock content
-    return x
-
 prompt = "\x1b[0;33m>>>\x1b[0m"
 back = "\r\x1b[0;32m<<<\x1b[0m"
-
-sender :: NS.Socket -> C.ByteString -> IO ()
-sender sock msg = do
-    push sock msg
-
-get :: NS.Socket -> IO C.ByteString
-get sock = do
-    resp <- recv sock 1024
-    return resp
-
-reciever :: NS.Socket -> IO C.ByteString
-reciever sock = do
-    resp <- get sock
-    return resp
+recieveBlockSize = 1024
 
 run :: NS.Socket -> IO ()
 run sock = do
     chan <- newChan
-    let broadcast msg = writeChan chan msg
+    let broadcast = writeChan chan
     commLine <- dupChan chan
     -- send
     sendThread <- async $ fix $ \loop -> do
         C.putStr $ C.pack prompt
-        line <- C.getLine
-        if line == C.pack "quit"
-            then do
-                return ()
+        line <- NC.getLine
+        if line == NC.pack "quit"
+            then return ()
             else do
-                sender sock line
+                sendAll sock line
                 loop
     -- recieve
     recieveThread <- async $ fix $ \loop -> do
-        line <- reciever sock
+        line <- recv sock recieveBlockSize
         if line == C.pack ""
             then return ()
             else do
