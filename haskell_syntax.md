@@ -20,7 +20,7 @@ Now that the high level design is clear enough to be used. Let's introduce `hask
 
 Let's take a breath and introduce `Haskell`. Sometime when I go to conferences I fell like `Haskell` is a label for programmers, if you know `Haskell` you must be smart. Well ... maybe that's why you are reading my post. Smart or not `Haskell` is `nerd` fun.
 
-When you learn new languages it's practical to use analogies from one language to an other. A lot among us learned `Html` then `Javascript` then `PHP` then `Cpp` or in other combination including `python`, `lua`, `golang`, `ruby` or many other languages.
+When you learn new languages it's practical to use analogies from one language to an other. A lot among us learned `Html` then `Javascript` then `PHP` then `Cpp` or other order/combination including `python`, `lua`, `golang`, `ruby` or many other languages.
 Learning `Haskell` is not a jump from the previous language you learned (unless you've studied an other functional language). It's a new world each new `Haskell` line will learn you something. This offers your brain a brand new vision of computer science.
 
 Introducing `Haskell` is not that easy since as said it's a jump to a new world. I'll take a rather unusual way, if you want "classical" ways you'll see interesting books in the references. The goal here is to introduce the concepts we need to create askBarrel.
@@ -97,7 +97,7 @@ ghci
 λ>
 ```
 
-This strange but beautiful `[a] -> [a] -> [a]` explains that `++` is a function of 2 variables of type `[a]` returning the type `a`. You may wonder why we have several `->` it's because any function in `haskell` can be seen construction maid of function of one variable, it may seem strange at first but it's one of the things that make `haskell` powerful.
+This strange but beautiful `[a] -> [a] -> [a]` explains that `++` is a function of 2 variables of type `[a]` returning the type `[a]`. You may wonder why we have several `->` it's because any function in `haskell` can be seen as a construction made of functions of one variable, it may seem strange at first but it's one of the things that make `haskell` powerful.
 
 Let's break `++` into parts adding parenthesis.
 
@@ -111,7 +111,7 @@ ghci
 
 So `("first" ++)` type signature (right of `::`) is `[Char] -> [Char]`.
 
-From an instance of type `[Char]` return (`->`) one instance of type `[Char]`.
+From an argument of type `[Char]` return (`->`) one value of type `[Char]`.
 
 Let's go back on `(++)`.
 
@@ -137,13 +137,11 @@ It works as expected. `Emina` my noble colleague made me realize that it was not
 | parameters          | result |
    [a] -> ... -> [a]  ->    [a]
 
--- to use a part of the function
+-- to use partially the function
 | parameters          |      result |
    [a] -> ... -> [a]  ->  [a] -> [a]
 -- here we will have a function you'll need one more `[a]` to get a result such as ("first" ++)
 ```
-
-Note you can use only `:t` as shortcut for `:type`. I use type to emphasis the fact we are asking the `type` here.
 
 ### Meet the `=>` double arrow using `:info`
 
@@ -194,7 +192,7 @@ instance Num Float -- Defined in ‘GHC.Float’
 instance Num Double -- Defined in ‘GHC.Float’
 ```
 
-We could implement more if we want. It's an other beauty of `haskell` we tell a contract for a variable here `Num` and any instance matching the contract can be used.
+We could implement more if we wanted to. It's an other beauty of `haskell` we tell a contract for a variable `a` here `Num` and any instance matching the contract can be used `Word`, `Integer`, etc.
 
 ```haskell
 ghci
@@ -312,13 +310,13 @@ clisp
 
 It's one of the many reasons why `lisp`and `haskell` community are connected.
 
-I did focused on the fact that `++` is an `infix function`. To get to understand it try to move `++` one side or the other `(++ "string")` and `("string" ++)`.
+I did not focus on the fact that `++` is an `infix function`. To get to understand it try to move `++` one side or the other `(++ "string")` and `("string" ++)`.
 
 For more details see [infix functions](https://wuciawe.github.io/functional%20programming/haskell/2016/07/03/infix-functions-in-haskell.html).
 
 ## Conclusion
 
-Now we learn the basics of haskell syntax with the goal manipulate strings which is our basic tool for a `REPL` client. In the next part we'll tackle the `M word` the `Monad`.
+We meet the `Haskell` syntax with the goal manipulate strings our basic tool for a `REPL` client. In the next part we'll tackle the `M word` the mythical creature called `Monad`.
 
 ## Appendix : references
 
