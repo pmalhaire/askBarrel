@@ -22,7 +22,7 @@ Monad has became a mythical creature in programming concepts universe. I used it
 
 I won't lie, it's not a pain free to learn it. And to be honest I am not entirely comfortable with it. But it's conceptually interesting and helped me to approach many concepts I didn't even note before.
 
-I'll expose one by one the concepts behind monads. Your brain will slowly be surely assemble the puzzle. You'll fell fireworks in your brain. Don't panic it's normal.
+I'll expose one by one the concepts behind monads. Your brain will slowly but surely assemble the puzzle. You'll fell fireworks in your brain. Don't panic it's normal.
 
 ### A big picture
 

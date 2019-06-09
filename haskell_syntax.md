@@ -14,16 +14,16 @@
 
 ## Introduction
 
-Now that the high level design is clear enough to be used. Let's introduce `haskell`. This project is my first in this wonderful language and I took this as an opportunity to use my fresh eyes on the language to introduce it.
+Now that the [high level design](design.md) is clear enough to be used. Let's introduce `haskell`. This project is my first in this wonderful language and the opportunity to introduce the language with my fresh eyes.
 
 ## Let's enter the Haskell world
 
-Let's take a breath and introduce `Haskell`. Sometime when I go to conferences I fell like `Haskell` is a label for programmers, if you know `Haskell` you must be smart. Well ... maybe that's why you are reading my post. Smart or not `Haskell` is `nerd` fun.
+Let's take a breath and introduce `Haskell`. Sometime when I go to conferences I fell like `Haskell` is a label for programmers. If you know `Haskell` you must be smart. Well ... maybe that's why you are reading my post. Smart or not `Haskell` is `nerd` fun.
 
 When you learn new languages it's practical to use analogies from one language to an other. A lot among us learned `Html` then `Javascript` then `PHP` then `Cpp` or other order/combination including `python`, `lua`, `golang`, `ruby` or many other languages.
-Learning `Haskell` is not a jump from the previous language you learned (unless you've studied an other functional language). It's a new world each new `Haskell` line will learn you something. This offers your brain a brand new vision of computer science.
+Learning `Haskell` is not a jump from the previous language you learned (unless you've studied an other functional language). It's a new world. Each new `Haskell` line will learn you something : a brand new vision of computer programming !
 
-Introducing `Haskell` is not that easy since as said it's a jump to a new world. I'll take a rather unusual way, if you want "classical" ways you'll see interesting books in the references. The goal here is to introduce the concepts we need to create askBarrel.
+Introducing `Haskell` is not that easy since it's a jump to a new world. I'll take a rather unusual way, if you want "classical" ways you'll see interesting books in the [references](#appendix--references). The goal here is to introduce concepts we needed to create askBarrel.
 
 ## Meet the haskell syntax
 
@@ -33,7 +33,7 @@ Mine is somehow singular, I find `Haskell` syntax graphically beautiful.
 
 One thing that can loose you when learning `haskell` is the symbols such as `=>`, `::`, `->`, `$`,`<$`. It's based on many useful concepts. Once the concept is yours the symbol will come naturally. You'll ask yourself I want to do that I know there is a glyph for it.
 
-The goal of this project is to make a `REPL` parser. Our main objects are `strings` so we'll focus on example concerning strings.
+The goal of this project is to make a `REPL` parser. Our main objects are `strings` (a list of char `[Char]`) so we'll focus on it.
 
 A useful [link](https://github.com/takenobu-hs/haskell-symbol-search-cheatsheet) to help you google about symbols.
 
@@ -133,14 +133,22 @@ This kind of manipulation will be very useful as it allows to chain multiple fun
 It works as expected. `Emina` my noble colleague made me realize that it was not that instinctive. Meanwhile we are looking at one of `Haskell`'s beauty. A way to see it is to cut type `signature` as follow.
 
 ```haskell
--- to use the function
-| parameters          | result |
-   [a] -> ... -> [a]  ->    [a]
-
--- to use partially the function
-| parameters          |      result |
-   [a] -> ... -> [a]  ->  [a] -> [a]
--- here we will have a function you'll need one more `[a]` to get a result such as ("first" ++)
+-- to use the function entirely give it 2 parameters
+-- | parameters     | result |
+--   [a] ->   [a]  ->    [a]
+λ> "first-" ++ "-second"
+"first--second"
+-- to use partially the function give it only one parameters
+-- | parameter   |      result |
+--    [a]       ->  [a] -> [a]
+-- here we will have a function you'll need one more `[a]` to get a result such as ("first-" ++)
+λ> f=("first-" ++)
+-- ("first-" ++) it used as a brick once
+λ> f "test"
+"first-test"
+-- ("first-" ++) it used as a brick twice
+λ> f ( f "test")
+"first-first-test"
 ```
 
 ### Meet the `=>` double arrow using `:info`
@@ -192,7 +200,7 @@ instance Num Float -- Defined in ‘GHC.Float’
 instance Num Double -- Defined in ‘GHC.Float’
 ```
 
-We could implement more if we wanted to. It's an other beauty of `haskell` we tell a contract for a variable `a` here `Num` and any instance matching the contract can be used `Word`, `Integer`, etc.
+We could implement more if we wanted to. It's an other beauty of `haskell` we tell a contract for variable `a` here `Num` and any instance matching the contract can be used `Word`, `Integer`, etc.
 
 ```haskell
 ghci
@@ -269,7 +277,7 @@ ghci
 "head-content-tail"
 ```
 
-Let's create a function
+Let's create a function.
 
 ```haskell
 ghci
@@ -277,6 +285,29 @@ ghci
 λ> headtail "content"
 "head-content-tail"
 ```
+
+Usually function argument are written `a` (then `b`) for variables and `f` (then `g`) for functions.
+Here `a` is the argument of `headtail`.
+
+Here we did not put any constraint on the type of `a`. Since it's used by `(++ "-tail")` it must conform to it's type.
+
+```haskell
+ghci
+λ> :t (++ "-tail")
+(++ "-tail") :: [Char] -> [Char]
+```
+
+`a` is implicitly a `[Char]`.
+
+Let's check.
+
+```haskell
+ghci
+λ> headtail a = ("head-" ++) $ (++ "-tail") a
+λ> :t headtail
+headtail :: [Char] -> [Char]
+```
+
 
 ## [Interlude] The smell of lisp
 
@@ -310,13 +341,13 @@ clisp
 
 It's one of the many reasons why `lisp`and `haskell` community are connected.
 
-I did not focus on the fact that `++` is an `infix function`. To get to understand it try to move `++` one side or the other `(++ "string")` and `("string" ++)`.
+I did not focus on the fact that `++` is an `infix function`. To get to understand it try to move `++` one side and the other `(++ "string")` and `("string" ++)`.
 
 For more details see [infix functions](https://wuciawe.github.io/functional%20programming/haskell/2016/07/03/infix-functions-in-haskell.html).
 
 ## Conclusion
 
-We meet the `Haskell` syntax with the goal manipulate strings our basic tool for a `REPL` client. In the next part we'll tackle the `M word` the mythical creature called `Monad`.
+We met `Haskell` syntax with the goal manipulate strings for a `REPL` client. In the next part we'll tackle the `M word` the mythical creature called `Monad`.
 
 ## Appendix : references
 
