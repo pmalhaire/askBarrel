@@ -80,7 +80,7 @@ The `Repl engine` write the response to the shell
 { "result" : "ok" }
 ```
 
-<!-- big drawing with all the different parts and helicopter -->
+![askBarrel](askBarrel.png)
 
 ## Where do I begin with ?
 
@@ -113,17 +113,21 @@ Meanwhile it's dangerous to write code without a clear plan. Let's write down th
 
 ### Mandatory
 
+```md
 1. Repl engine                   : interact with the shell
 2. Command line parser           : parse written sentences to commands
 3. Query parser                  : parse DB queries
 4. Transport library             : sends and receive data from the DB server
+```
 
 ### Must have
 
+```md
 1. Document reader               : read and validate input documents before sending them
 2. Concurrency                   : allow several commands to run at the same time
 3. Stream processing             : handle the case of stream
 4. Post processing operations    : give the ability to do operations on the received documents
+```
 
 ## Conclusion
 
