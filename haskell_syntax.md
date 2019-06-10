@@ -347,7 +347,7 @@ For more details see [infix functions](https://wuciawe.github.io/functional%20pr
 
 ## Conclusion
 
-We met `Haskell` syntax with the goal manipulate strings for a `REPL` client. In the next part we'll tackle the `M word` the mythical creature called `Monad`.
+We met `Haskell` syntax with the goal manipulate strings for a `REPL` client. In [part 3](haskell_monad.md) we'll tackle the `M word` the mythical creature called `Monad`.
 
 ## Appendix : references
 

@@ -133,5 +133,5 @@ Meanwhile it's dangerous to write code without a clear plan. Let's write down th
 
 In this first post we get to know the basic design of `askBarrel` a command line `barrelDB` client. For most developer (that mean at least me) it's rather frustrating not to see a line of code but getting the lights of the high level design helps not to fall in the shadow of bad code.
 
-Part 2 will be an introduction on `haskell` focussed on the concepts needed to do the first part of the project :
+[Part 2](haskell_syntax.md) will be an introduction on `haskell` focussed on the concepts needed to do the first part of the project :
 the `Transport library`.
