@@ -1,4 +1,7 @@
 .history
 .stack-work/
 askBarrel.cabal
-
+!network/**/
+!network/*.*
+*/*.o
+*/*.hi
