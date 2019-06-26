@@ -22,8 +22,6 @@ for i in {1..100};do ./bin/fork < $TEST_FILE > $TMP_DIR/$i.log; echo -ne "\r\t$i
 echo -e "\n...OK"
 kill $PID_SERVER
 
-exit 1
-
 echo "clean up"
 rm $TEST_FILE
 rm $TMP_DIR/*.log
