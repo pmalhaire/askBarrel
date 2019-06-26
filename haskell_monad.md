@@ -1,19 +1,19 @@
-# An Haskell trip [part 2] : askBarrel a REPL client for barrelDB
+# An Haskell trip [part 3] : askBarrel a REPL client for barrelDB
 
-- [The monad universe](#the-monad-universe)
-  - [A big picture](#a-big-picture)
+- [The monad universe](#The-monad-universe)
+  - [A big picture](#A-big-picture)
   - [functor](#functor)
     - [technical definition](#technical-definition)
     - [practical example](#practical-example)
   - [applicative](#applicative)
     - [technical definition](#technical-definition-1)
     - [practical example](#practical-example-1)
-  - [Monad](#monad)
+  - [Monad](#Monad)
     - [technical definition](#technical-definition-2)
   - [practical example](#practical-example-2)
-  - [All programs begin with the `IO monad`](#all-programs-begin-with-the-io-monad)
-    - [Huston there is a problem](#huston-there-is-a-problem)
-    - [Interact with the shell](#interact-with-the-shell)
+  - [All programs begin with the `IO monad`](#All-programs-begin-with-the-IO-monad)
+    - [Huston there is a problem](#Huston-there-is-a-problem)
+    - [Interact with the shell](#Interact-with-the-shell)
 - [conclusion](#conclusion)
 
 ## The monad universe
