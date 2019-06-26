@@ -10,6 +10,7 @@ import Network.Socket.ByteString (recv, sendAll)
 -- resolve server address info
 resolve :: String -> String -> IO NS.AddrInfo
 resolve host port = do
+    -- set socket type
     let hints = NS.defaultHints { NS.addrSocketType = NS.Stream }
     addr:_ <- NS.getAddrInfo
         (Just hints)
@@ -28,6 +29,7 @@ open addr = do
     return sock
 
 -- talk to the server tell hello world
+talk :: NS.Socket -> IO()
 talk sock = do
     sendAll sock "Hello, world!"
 
